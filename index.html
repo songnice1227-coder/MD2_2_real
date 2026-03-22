@@ -1955,7 +1955,6 @@ function AdminPage({ opps, onAdd, onDelete }){
 ═══════════════════════════════════════ */
 function LoginPage({ onLogin }){
   const [id, setId]         = useState('');
-  const [grade, setGrade]   = useState(0);
   const [loading, setLoading] = useState(false);
   const [err, setErr]       = useState('');
 
@@ -1968,11 +1967,8 @@ function LoginPage({ onLogin }){
     setLoading(true); setErr('');
     db.collection('users').doc(trimmed).get()
       .then(doc=>{
-        const savedGrade = doc.exists && doc.data().grade ? doc.data().grade : grade;
-        if(grade && (!doc.exists || !doc.data().grade)){
-          db.collection('users').doc(trimmed).set({ grade }, { merge:true });
-        }
-        onLogin(trimmed, savedGrade||grade);
+        const savedGrade = doc.exists && doc.data().grade ? doc.data().grade : 0;
+        onLogin(trimmed, savedGrade);
       })
       .catch(()=>{ setErr('연결 오류가 발생했어요. 다시 시도해주세요'); setLoading(false); });
   }
@@ -1997,19 +1993,6 @@ function LoginPage({ onLogin }){
           placeholder="나만의 아이디를 입력하세요"
           onKeyDown={e=>e.key==='Enter'&&handleLogin()}
           maxLength={20} autoFocus/>
-        <label className="login-label" style={{marginTop:'12px'}}>현재 학년 <span style={{color:'var(--text3)',fontWeight:400}}>(선택)</span></label>
-        <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'4px'}}>
-          {[{v:0,l:'선택 안 함'},{v:1,l:'1학년'},{v:2,l:'2학년'},{v:3,l:'3학년'},{v:4,l:'4학년'}].map(g=>(
-            <div key={g.v}
-              onClick={()=>setGrade(g.v)}
-              style={{padding:'6px 14px',borderRadius:'99px',fontSize:'12px',fontWeight:700,cursor:'pointer',
-                border:`1.5px solid ${grade===g.v?'var(--primary)':'var(--border)'}`,
-                background:grade===g.v?'var(--primary)':'var(--surface)',
-                color:grade===g.v?'#fff':'var(--text2)',transition:'all var(--t)'}}>
-              {g.l}
-            </div>
-          ))}
-        </div>
         {err && <div className="login-err">{err}</div>}
         <button className="login-btn" onClick={handleLogin} disabled={loading}>
           {loading ? '로그인 중...' : '시작하기'}
@@ -2328,11 +2311,13 @@ function ExplorePage({ opps, projects, onSave, onOpenDetail, userGrade }){
       <div className="fcard-section" ref={cardSectionRef}>
         <div className="fcard-filters">
           <div style={{flex:'1',minWidth:'260px',display:'flex',flexDirection:'column',gap:'5px'}}>
-            <div className="hero-search" style={{marginBottom:0}}>
-              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="공고명, 회사, 분야로 검색 · 없으면 외부 플랫폼 연결"/>
-              <button>검색</button>
+            <div style={{maxWidth:'480px',margin:'0 auto',width:'100%'}}>
+              <div className="hero-search" style={{margin:0,maxWidth:'none'}}>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="공고명, 회사, 분야로 검색"/>
+                <button>검색</button>
+              </div>
+              <div style={{fontSize:'11px',color:'var(--text3)',paddingLeft:'20px',marginTop:'4px'}}>🔗 찾는 공고가 없으면 링커리어·위비티 검색으로 바로 연결해드려요</div>
             </div>
-            {!search && <div style={{fontSize:'11px',color:'var(--text3)',paddingLeft:'6px'}}>🔗 찾는 공고가 없으면 링커리어·위비티 검색으로 바로 연결해드려요</div>}
           </div>
           <select className="filter-select" value={field} onChange={e=>setField(e.target.value)}>
             <option value="">모든 분야</option>
